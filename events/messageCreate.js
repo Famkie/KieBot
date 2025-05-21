@@ -1,6 +1,6 @@
 const prefix = '!';
 
-module.exports = {
+export default {
   name: 'messageCreate',
 
   async execute(message, client) {
