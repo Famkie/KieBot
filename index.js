@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const { Client, Collection, GatewayIntentBits, Partials, Events, EmbedBuilder } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 require('dotenv').config();
 const config = require('./config/config.js');
 
-// === Keep Alive (optional, untuk Cybrancee/Replit) ===
+// === Keep Alive (opsional, buat Cybrancee/Replit) ===
 const express = require('express');
 const app = express();
 app.get('/', (req, res) => res.send('Bot is running!'));
@@ -22,31 +22,12 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-client.aliases = new Collection();
-client.giveaways = new Map(); // <- Tambahan: untuk menyimpan data giveaway aktif
 
-// Load handler
+// === Load Command Handler ===
 require('./handlers/commandHandler')(client);
 
-// === Load Commands ===
-const commandFolders = fs.readdirSync('./commands');
-for (const folder of commandFolders) {
-  const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
-
-  for (const file of commandFiles) {
-    const command = require(`./commands/${folder}/${file}`);
-    if (!command.name) continue;
-
-    client.commands.set(command.name, command);
-    if (command.aliases && Array.isArray(command.aliases)) {
-      command.aliases.forEach(alias => client.aliases.set(alias, command.name));
-    }
-  }
-}
-
-// === Load Events ===
+// === Load Events (optional, kalau kamu pakai event terpisah) ===
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
-
 for (const file of eventFiles) {
   const event = require(`./events/${file}`);
   if (event.once) {
@@ -56,23 +37,18 @@ for (const file of eventFiles) {
   }
 }
 
-// === Listener Button Giveaway ===
-client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isButton()) return;
+// === Slash Command Handler ===
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.customId === 'join_giveaway') {
-    const giveaway = client.giveaways.get(interaction.message.id);
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
 
-    if (!giveaway) {
-      return interaction.reply({ content: 'Giveaway tidak ditemukan atau sudah berakhir.', ephemeral: true });
-    }
-
-    if (giveaway.participants.has(interaction.user.id)) {
-      return interaction.reply({ content: 'Kamu sudah ikut giveaway ini!', ephemeral: true });
-    }
-
-    giveaway.participants.add(interaction.user.id);
-    return interaction.reply({ content: 'Berhasil ikut giveaway!', ephemeral: true });
+  try {
+    await command.execute(interaction);
+  } catch (err) {
+    console.error(err);
+    await interaction.reply({ content: 'Terjadi error saat menjalankan command.', ephemeral: true });
   }
 });
 
