@@ -4,11 +4,14 @@ const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js'
 require('dotenv').config();
 const config = require('./config/config.js');
 
+// Import logger
+const { log } = require('./utils/logger');
+
 // === Keep Alive (opsional) ===
 const express = require('express');
 const app = express();
 app.get('/', (req, res) => res.send('Bot is running!'));
-app.listen(3000, () => console.log('Keepalive aktif di port 3000'));
+app.listen(3000, () => log('info', 'Keepalive aktif di port 3000'));
 
 // === Client Setup ===
 const client = new Client({
@@ -23,31 +26,44 @@ const client = new Client({
 
 client.commands = new Collection();
 
+log('info', 'Memulai load command handler...');
 // === Load Command Handler ===
 require('./handlers/commandHandler')(client);
+log('info', `Loaded ${client.commands.size} commands.`);
 
 // === Load Events (jika ada) ===
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
   const event = require(`./events/${file}`);
   if (event.once) {
-    client.once(event.name, (...args) => event.execute(...args, client));
+    client.once(event.name, (...args) => {
+      log('event', `Event loaded (once): ${event.name}`);
+      event.execute(...args, client);
+    });
   } else {
-    client.on(event.name, (...args) => event.execute(...args, client));
+    client.on(event.name, (...args) => {
+      log('event', `Event loaded: ${event.name}`);
+      event.execute(...args, client);
+    });
   }
 }
 
-// === Interaction Handler ===
+log('info', 'Menyiapkan interaction handler...');
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   const command = client.commands.get(interaction.commandName);
-  if (!command) return;
+  if (!command) {
+    log('warn', `Command tidak ditemukan: ${interaction.commandName}`);
+    return;
+  }
+
+  log('command', `${interaction.user.tag} menjalankan command /${interaction.commandName}`);
 
   try {
     await command.execute(interaction);
   } catch (err) {
-    console.error('Error executing command:', err);
+    log('error', `Error executing command /${interaction.commandName}: ${err.message}`);
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: 'Terjadi error saat menjalankan command.', ephemeral: true });
     }
@@ -55,4 +71,6 @@ client.on('interactionCreate', async interaction => {
 });
 
 // === Jalankan Bot ===
-client.login(config.token);
+client.login(config.token)
+  .then(() => log('info', 'Bot berhasil login dan siap digunakan!'))
+  .catch(err => log('error', `Gagal login: ${err.message}`));
