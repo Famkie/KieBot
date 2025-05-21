@@ -1,38 +1,35 @@
-const { SlashCommandBuilder } = require('discord.js');
-const isVerifiedTC = require('../../utils/torn/isVerifiedTC.js');
-const fetchTornData = require('../../utils/torn/fetchTorn.js');
-const { getTornUser, setTornUser} = require('../../utils/torn/tornUsers.js');
+import { SlashCommandBuilder } from 'discord.js';
+import isVerifiedTC from '../../utils/torn/isVerifiedTC.js';
+import fetchTornData from '../../utils/torn/fetchTorn.js';
+import { getTornUser } from '../../utils/torn/tornUsers.js';
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('tcprofile')
-    .setDescription('Tampilkan profil Torn City kamu'),
+export const data = new SlashCommandBuilder()
+  .setName('tcprofile')
+  .setDescription('Tampilkan profil Torn City kamu');
 
-  async execute(interaction) {
-    await interaction.deferReply();
+export async function execute(interaction) {
+  await interaction.deferReply({ ephemeral: true });
 
-    // Cek apakah user verified di server resmi Torn City
-    const verified = await isVerifiedTC(interaction.client, interaction.user.id);
-
-    if (!verified) {
-      return interaction.editReply({
-        content: 'Kamu belum terverifikasi di server resmi Torn City.',
-        ephemeral: true
-      });
-    }
-
-    // Ambil data API key dari penyimpanan lokal (opsional jika kamu tetap pakai key)
-    const user = getTornUser(interaction.user.id);
-    if (!user) {
-      return interaction.editReply('Tidak ditemukan API key untuk akun ini.');
-    }
-
-    const data = await fetchTornData('user', 'basic,profile', user.key);
-
-    if (data.error) {
-      return interaction.editReply(`Gagal mengambil data: ${data.error}`);
-    }
-
-    return interaction.editReply(`**${data.name}** [${data.player_id}]\nLevel: ${data.level}\nMoney: $${data.money}`);
+  const verified = await isVerifiedTC(interaction.client, interaction.user.id);
+  if (!verified) {
+    return interaction.editReply({
+      content: 'Kamu belum terverifikasi di server resmi Torn City.',
+    });
   }
-};
+
+  const user = getTornUser(interaction.user.id);
+  if (!user) {
+    return interaction.editReply('Tidak ditemukan API key untuk akun ini.');
+  }
+
+  const data = await fetchTornData('user', 'basic,profile', user.apiKey || user.key);
+  if (data.error) {
+    return interaction.editReply(`Gagal mengambil data: ${data.error}`);
+  }
+
+  return interaction.editReply(
+    `**${data.name}** [${data.player_id}]\n` +
+    `Level: ${data.level}\n` +
+    `Money: $${data.money.toLocaleString()}`
+  );
+}
