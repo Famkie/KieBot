@@ -1,17 +1,22 @@
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName('endgiveaway')
     .setDescription('Paksa akhiri giveaway')
     .addStringOption(opt =>
-      opt.setName('message_id').setDescription('ID pesan giveaway').setRequired(true)
+      opt.setName('message_id')
+        .setDescription('ID pesan giveaway')
+        .setRequired(true)
     ),
-  async execute(interaction) {
+
+  async slashExecute(interaction) {
     const messageId = interaction.options.getString('message_id');
     const giveaway = interaction.client.giveaways.get(messageId);
-    if (!giveaway) return interaction.reply({ content: 'Giveaway tidak ditemukan.', ephemeral: true });
+
+    if (!giveaway) {
+      return interaction.reply({ content: 'Giveaway tidak ditemukan.', ephemeral: true });
+    }
 
     const participants = [...giveaway.participants];
     const winner = participants.length > 0
