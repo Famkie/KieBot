@@ -1,19 +1,9 @@
-const chalk = require('chalk');
+import chalk from 'chalk';
 
-const timestamp = () => new Date().toISOString();
-
-const log = (type, message) => {
-  const prefixMap = {
-    info: chalk.blue('[INFO]'),
-    warn: chalk.yellow('[WARN]'),
-    error: chalk.red('[ERROR]'),
-    event: chalk.magenta('[EVENT]'),
-    command: chalk.green('[COMMAND]')
-  };
-
-  const prefix = prefixMap[type] || '';
-
-  console.log(`[${timestamp()}] ${prefix} ${message}`);
+const log = {
+  info: (...args) => console.log(chalk.blue('[INFO]'), ...args),
+  warn: (...args) => console.log(chalk.yellow('[WARN]'), ...args),
+  error: (...args) => console.log(chalk.red('[ERROR]'), ...args),
 };
 
-module.exports = { log };
+export default log;
