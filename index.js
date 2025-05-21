@@ -1,14 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
-require('dotenv').config();
-const config = require('./config/config.js');
+import fs from 'fs';
+import path from 'path';
+import express from 'express';
+import { Client, Collection, GatewayIntentBits, Partials } from 'discord.js';
+import dotenv from 'dotenv';
+import config from './config/config.js';
+import log from './utils/logger.js';
 
-// Import logger (pakai object dengan method: info, warn, error, dst)
-const { log } = require('./utils/logger');
+dotenv.config();
 
 // === Keep Alive (opsional) ===
-const express = require('express');
 const app = express();
 app.get('/', (req, res) => res.send('Bot is running!'));
 app.listen(3000, () => log.info('Keepalive aktif di port 3000'));
@@ -29,25 +29,29 @@ client.commands = new Collection();
 log.info('Memulai load command handler...');
 
 // === Load Command Handler ===
-require('./handlers/commandHandler')(client);
-log.info(`Loaded ${client.commands.size} commands.`);
+import('./handlers/commandHandler.js').then(module => {
+  module.default(client);
+  log.info(`Loaded ${client.commands.size} commands.`);
+}).catch(err => {
+  log.error('Gagal memuat command handler:', err.message);
+});
 
 // === Load Events ===
-const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
-for (const file of eventFiles) {
-  const event = require(`./events/${file}`);
+const eventsPath = './events';
+fs.readdirSync(eventsPath).filter(file => file.endsWith('.js')).forEach(async file => {
+  const { default: event } = await import(`./events/${file}`);
   if (event.once) {
     client.once(event.name, (...args) => {
-      log.event(`Event loaded (once): ${event.name}`);
+      log.info(`Event loaded (once): ${event.name}`);
       event.execute(...args, client);
     });
   } else {
     client.on(event.name, (...args) => {
-      log.event(`Event loaded: ${event.name}`);
+      log.info(`Event loaded: ${event.name}`);
       event.execute(...args, client);
     });
   }
-}
+});
 
 log.info('Menyiapkan interaction handler...');
 client.on('interactionCreate', async interaction => {
@@ -59,7 +63,7 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  log.command(`${interaction.user.tag} menjalankan command /${interaction.commandName}`);
+  log.info(`${interaction.user.tag} menjalankan command /${interaction.commandName}`);
 
   try {
     await command.execute(interaction);
