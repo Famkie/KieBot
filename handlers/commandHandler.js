@@ -1,8 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = (client) => {
-  const commandFolders = fs.readdirSync('./commands');
+// Buat __dirname di ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default (client) => {
+  const commandFolders = fs.readdirSync(path.join(__dirname, '..', 'commands'));
 
   for (const folder of commandFolders) {
     const folderPath = path.join(__dirname, '..', 'commands', folder);
@@ -12,11 +17,14 @@ module.exports = (client) => {
 
       for (const file of commandFiles) {
         const filePath = path.join(folderPath, file);
-        const command = require(filePath);
-        if (command.data && command.data.name) {
-          client.commands.set(command.data.name, command);
-          console.log(`[Command] Loaded: ${command.data.name}`);
-        }
+        // Import dinamis di ESM harus pakai import(), jadi ini promise
+        import(filePath).then((commandModule) => {
+          const command = commandModule.default || commandModule;
+          if (command.data && command.data.name) {
+            client.commands.set(command.data.name, command);
+            console.log(`[Command] Loaded: ${command.data.name}`);
+          }
+        }).catch(console.error);
       }
     }
   }
