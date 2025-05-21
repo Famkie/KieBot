@@ -1,5 +1,5 @@
 // commands/lotto/j.js 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js'); const lottoStore = require('../../utils/lottoStore'); const { getTornUser } = require('../../utils/tornUsers'); const fetchTornData = require('../../utils/fetchTorn');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js'); const lottoStore = require('../../utils/torn/lottoStore'); const { getTornUser } = require('../../utils/tornUsers'); const fetchTornData = require('../../utils/fetchTorn');
 
 module.exports = { data: new SlashCommandBuilder() .setName('j') .setDescription('Join the current lotto'),
 
