@@ -1,12 +1,12 @@
-const isVerifiedTC = require('../../utils/isVerifiedTC');
+import isVerifiedTC from '../../utils/isVerifiedTC.js';
 
-module.exports = {
+export default {
   name: 'guildMemberAdd',
   once: false,
   async execute(member) {
     // Cek apakah user terverifikasi di server Torn City resmi
     const verified = await isVerifiedTC(member.client, member.id);
-    
+
     if (verified) {
       // Cari role yang akan diberikan di server milikmu
       const role = member.guild.roles.cache.find(r => r.name === 'Verified TC');
