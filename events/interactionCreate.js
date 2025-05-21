@@ -1,17 +1,18 @@
-const fs = require("fs");
-const path = require("path");
+import fs from 'fs';
+import path from 'path';
 
-module.exports = {
+export default {
   name: 'interactionCreate',
 
   async execute(interaction, client) {
     // Handle Button Interactions
     if (interaction.isButton()) {
       if (interaction.customId === "join_lotto") {
-        const lottoPath = path.join(__dirname, "../data/lotto.json");
+        const lottoPath = path.join(path.dirname(new URL(import.meta.url).pathname), "../data/lotto.json");
+
         if (!fs.existsSync(lottoPath)) return;
 
-        const lottoData = JSON.parse(fs.readFileSync(lottoPath));
+        const lottoData = JSON.parse(fs.readFileSync(lottoPath, 'utf-8'));
         if (!lottoData.host || !lottoData.prize) {
           return interaction.reply({ content: "Tidak ada lotto aktif!", ephemeral: true });
         }
@@ -31,7 +32,7 @@ module.exports = {
           ephemeral: false
         });
       }
-      return; // Keluar jika bukan tombol yang relevan
+      return; // Keluar kalau bukan tombol relevan
     }
 
     // Handle Slash Command Interactions
