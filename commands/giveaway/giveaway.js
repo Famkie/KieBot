@@ -1,16 +1,27 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+import {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} from 'discord.js';
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName('giveaway')
     .setDescription('Mulai giveaway!')
     .addStringOption(opt =>
-      opt.setName('hadiah').setDescription('Hadiah giveaway').setRequired(true)
+      opt.setName('hadiah')
+        .setDescription('Hadiah giveaway')
+        .setRequired(true)
     )
     .addIntegerOption(opt =>
-      opt.setName('durasi').setDescription('Durasi dalam detik').setRequired(true)
+      opt.setName('durasi')
+        .setDescription('Durasi dalam detik')
+        .setRequired(true)
     ),
-  async execute(interaction) {
+
+  async slashExecute(interaction) {
     const hadiah = interaction.options.getString('hadiah');
     const durasi = interaction.options.getInteger('durasi');
 
@@ -28,11 +39,17 @@ module.exports = {
 
     const row = new ActionRowBuilder().addComponents(button);
 
-    const msg = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+    const msg = await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      fetchReply: true
+    });
 
     const participants = new Set();
 
-    const collector = msg.createMessageComponentCollector({ time: durasi * 1000 });
+    const collector = msg.createMessageComponentCollector({
+      time: durasi * 1000
+    });
 
     collector.on('collect', i => {
       if (!participants.has(i.user.id)) {
@@ -51,7 +68,10 @@ module.exports = {
         .setDescription(winner ? `Pemenangnya adalah: <@${winner}>` : 'Tidak ada yang ikut giveaway.')
         .setColor(0xFFD700);
 
-      await interaction.editReply({ embeds: [resultEmbed], components: [] });
+      await interaction.editReply({
+        embeds: [resultEmbed],
+        components: []
+      });
     });
   }
 };
