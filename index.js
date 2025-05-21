@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials, Events, EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 const config = require('./config/config.js');
 
@@ -23,6 +23,7 @@ const client = new Client({
 
 client.commands = new Collection();
 client.aliases = new Collection();
+client.giveaways = new Map(); // <- Tambahan: untuk menyimpan data giveaway aktif
 
 // Load handler
 require('./handlers/commandHandler')(client);
@@ -54,6 +55,26 @@ for (const file of eventFiles) {
     client.on(event.name, (...args) => event.execute(...args, client));
   }
 }
+
+// === Listener Button Giveaway ===
+client.on(Events.InteractionCreate, async interaction => {
+  if (!interaction.isButton()) return;
+
+  if (interaction.customId === 'join_giveaway') {
+    const giveaway = client.giveaways.get(interaction.message.id);
+
+    if (!giveaway) {
+      return interaction.reply({ content: 'Giveaway tidak ditemukan atau sudah berakhir.', ephemeral: true });
+    }
+
+    if (giveaway.participants.has(interaction.user.id)) {
+      return interaction.reply({ content: 'Kamu sudah ikut giveaway ini!', ephemeral: true });
+    }
+
+    giveaway.participants.add(interaction.user.id);
+    return interaction.reply({ content: 'Berhasil ikut giveaway!', ephemeral: true });
+  }
+});
 
 // === Start Bot ===
 client.login(config.token);
