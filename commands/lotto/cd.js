@@ -1,5 +1,6 @@
+// commands/slash/lotto/countdownDraw.js
 import { SlashCommandBuilder } from 'discord.js';
-import lottoStore from '../../utils/torn/lottoStore.js';
+import { getCurrentLotto } from '../../utils/torn/lottoStore.js';
 import { drawWinners } from '../../utils/torn/lottoDraw.js';
 
 export const data = new SlashCommandBuilder()
@@ -13,10 +14,10 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   const detik = interaction.options.getInteger('detik');
-  const lotto = lottoStore.activeLotto;
+  const lotto = getCurrentLotto();
 
   if (!lotto) {
-    return interaction.reply('Tidak ada undian yang sedang berjalan.');
+    return interaction.reply({ content: 'Tidak ada undian yang sedang berjalan.', ephemeral: true });
   }
 
   await interaction.reply(`Countdown dimulai. Draw akan dilakukan dalam ${detik} detik.`);
