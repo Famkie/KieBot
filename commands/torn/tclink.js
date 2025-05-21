@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import fetchTornData from '../../../utils/torn/fetchTorn.js';
-import { getTornUser, setTornUser } from '../../../utils/torn/tornUsers.js';
+import fetchTornData from '../../utils/torn/fetchTorn.js';
+import { getTornUser, setTornUser } from '../../utils/torn/tornUsers.js';
 
 export const data = new SlashCommandBuilder()
   .setName('tclink')
