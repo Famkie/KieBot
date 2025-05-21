@@ -4,7 +4,7 @@ const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js'
 require('dotenv').config();
 const config = require('./config/config.js');
 
-// === Keep Alive (opsional, buat Cybrancee/Replit) ===
+// === Keep Alive (opsional) ===
 const express = require('express');
 const app = express();
 app.get('/', (req, res) => res.send('Bot is running!'));
@@ -16,9 +16,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessageReactions
+    GatewayIntentBits.GuildMessageReactions,
   ],
-  partials: [Partials.Message, Partials.Channel, Partials.Reaction]
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
 client.commands = new Collection();
@@ -26,7 +26,7 @@ client.commands = new Collection();
 // === Load Command Handler ===
 require('./handlers/commandHandler')(client);
 
-// === Load Events (optional, kalau kamu pakai event terpisah) ===
+// === Load Events (jika ada) ===
 const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
 for (const file of eventFiles) {
   const event = require(`./events/${file}`);
@@ -37,7 +37,7 @@ for (const file of eventFiles) {
   }
 }
 
-// === Slash Command Handler ===
+// === Interaction Handler ===
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -47,10 +47,12 @@ client.on('interactionCreate', async interaction => {
   try {
     await command.execute(interaction);
   } catch (err) {
-    console.error(err);
-    await interaction.reply({ content: 'Terjadi error saat menjalankan command.', ephemeral: true });
+    console.error('Error executing command:', err);
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({ content: 'Terjadi error saat menjalankan command.', ephemeral: true });
+    }
   }
 });
 
-// === Start Bot ===
+// === Jalankan Bot ===
 client.login(config.token);
