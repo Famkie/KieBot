@@ -13,16 +13,10 @@ module.exports = (client) => {
       for (const file of commandFiles) {
         const filePath = path.join(folderPath, file);
         const command = require(filePath);
-        if (command.name) {
-          client.commands.set(command.name, command);
-          console.log(`[Command] Loaded: ${command.name}`);
+        if (command.data && command.data.name) {
+          client.commands.set(command.data.name, command);
+          console.log(`[Command] Loaded: ${command.data.name}`);
         }
-      }
-    } else if (folder.endsWith('.js')) {
-      const command = require(path.join(__dirname, '..', 'commands', folder));
-      if (command.name) {
-        client.commands.set(command.name, command);
-        console.log(`[Command] Loaded: ${command.name}`);
       }
     }
   }
