@@ -1,14 +1,17 @@
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName('listgiveaway')
     .setDescription('Lihat semua giveaway yang sedang aktif'),
-  async execute(interaction) {
+
+  async slashExecute(interaction) {
     const giveaways = [...interaction.client.giveaways.entries()];
     if (giveaways.length === 0)
-      return interaction.reply({ content: 'Tidak ada giveaway aktif.', ephemeral: true });
+      return interaction.reply({
+        content: 'Tidak ada giveaway aktif.',
+        ephemeral: true
+      });
 
     const embed = new EmbedBuilder()
       .setTitle('📋 Daftar Giveaway Aktif')
@@ -16,11 +19,11 @@ module.exports = {
 
     for (const [id, data] of giveaways) {
       embed.addFields({
-        name: `Hadiah: ${data.prize}`,
-        value: `Pesan ID: \`${id}\`\nBerakhir: <t:${Math.floor(data.endsAt / 1000)}:R>`,
+        name: `🎁 ${data.prize}`,
+        value: `Pesan ID: \`${id}\`\nPeserta: **${data.participants?.size ?? 0}**\nBerakhir: <t:${Math.floor(data.endsAt / 1000)}:R>`,
       });
     }
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   }
 };
