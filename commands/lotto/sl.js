@@ -1,41 +1,47 @@
-// commands/lotto/sl.js 
+import { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
+import lottoStore from '../../utils/torn/lottoStore.js';
+import { getTornUser } from '../../utils/torn/tornUsers.js';
+import fetchTornData from '../../utils/torn/fetchTorn.js';
 
-const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js'); const lottoStore = require('../../utils/torn/lottoStore.js'); const { getTornUser } = require('../../utils/torn/tornUsers.js'); const fetchTornData = require('../../utils/torn/fetchTorn.js');
+export const data = new SlashCommandBuilder()
+  .setName('sl')
+  .setDescription('Start a new lotto');
 
-module.exports = { data: new SlashCommandBuilder() .setName('sl') .setDescription('Start a new lotto'),
+export async function execute(interaction) {
+  await interaction.deferReply();
 
-async execute(interaction) { await interaction.deferReply();
+  const tornUser = getTornUser(interaction.user.id);
+  if (!tornUser) return interaction.editReply('Akun kamu belum terhubung dengan Torn City. Gunakan `/tcverify` terlebih dahulu.');
 
-const tornUser = getTornUser(interaction.user.id);
-if (!tornUser) return interaction.editReply('Akun kamu belum terhubung dengan Torn City. Gunakan `/tcverify` terlebih dahulu.');
+  const profile = await fetchTornData('user', 'basic,profile', tornUser.key);
+  if (profile.error) return interaction.editReply(`Gagal mengambil data Torn: ${profile.error}`);
 
-const profile = await fetchTornData('user', 'basic,profile', tornUser.key);
-if (profile.error) return interaction.editReply(`Gagal mengambil data Torn: ${profile.error}`);
+  if (lottoStore.activeLotto) return interaction.editReply('Masih ada undian yang aktif. Selesaikan dulu.');
 
-if (lottoStore.activeLotto) return interaction.editReply('Masih ada undian yang aktif. Selesaikan dulu.');
+  const hostName = `${profile.name} [${profile.player_id}]`;
+  const prize = 'cape tiap hari od';
 
-const hostName = `${profile.name} [${profile.player_id}]`;
-const prize = 'cape tiap hari od';
+  lottoStore.activeLotto = {
+    host: hostName,
+    prize,
+    entries: []
+  };
 
-lottoStore.activeLotto = {
-  host: hostName,
-  prize,
-  entries: []
-};
+  const embed = new EmbedBuilder()
+    .setTitle(`🎉 ${hostName} has started a lotto! 🎉`)
+    .setDescription(`Use /j to enter for a chance to win ${prize}!`)
+    .setColor('Green');
 
-const embed = new EmbedBuilder()
-  .setTitle(`🎉 ${hostName} has started a lotto! 🎉`)
-  .setDescription(`Use !j to enter for a chance to win ${prize}!`)
-  .setColor('Green');
+  const joinButton = new ButtonBuilder()
+    .setCustomId('join_lotto')
+    .setLabel('Join')
+    .setStyle(ButtonStyle.Primary);
 
-const joinButton = new ButtonBuilder()
-  .setCustomId('join_lotto')
-  .setLabel('Join')
-  .setStyle(ButtonStyle.Primary);
+  const row = new ActionRowBuilder().addComponents(joinButton);
 
-const row = new ActionRowBuilder().addComponents(joinButton);
-
-await interaction.editReply({ content: `There is a lotto running <@&LottoHunter>!`, embeds: [embed], components: [row] });
-
-} };
-
+  await interaction.editReply({
+    content: `Ada undian baru nih <@&LottoHunter>! Buruan join!`,
+    embeds: [embed],
+    components: [row]
+  });
+}
