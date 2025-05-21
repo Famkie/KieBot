@@ -1,34 +1,32 @@
-const fs = require('fs');
-const path = require('path');
-const { REST, Routes } = require('discord.js');
-require('dotenv').config();
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const commands = [];
-const commandFolders = fs.readdirSync('./commands');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-for (const folder of commandFolders) {
-  const commandPath = path.join('./commands', folder);
-  const commandFiles = fs.readdirSync(commandPath).filter(file => file.endsWith('.js'));
+export default async (client) => {
+  const commandFolders = fs.readdirSync(path.join(__dirname, '..', 'commands'));
 
-  for (const file of commandFiles) {
-    const command = require(`./commands/${folder}/${file}`);
-    if (command.data) {
-      commands.push(command.data.toJSON());
+  for (const folder of commandFolders) {
+    const folderPath = path.join(__dirname, '..', 'commands', folder);
+
+    if (fs.lstatSync(folderPath).isDirectory()) {
+      const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
+
+      for (const file of commandFiles) {
+        const filePath = path.join(folderPath, file);
+        try {
+          const commandModule = await import(filePath);
+          const command = commandModule.default || commandModule;
+          if (command.data && command.data.name) {
+            client.commands.set(command.data.name, command);
+            console.log(`[Command] Loaded: ${command.data.name}`);
+          }
+        } catch (error) {
+          console.error(`Failed to load command at ${filePath}:`, error);
+        }
+      }
     }
   }
-}
-
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-
-(async () => {
-  try {
-    console.log('⏳ Mengupdate slash command...');
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
-    console.log('✅ Slash command berhasil diupdate.');
-  } catch (err) {
-    console.error('❌ Gagal update slash command:', err);
-  }
-})();
+};
