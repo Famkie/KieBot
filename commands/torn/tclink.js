@@ -1,32 +1,48 @@
-const { SlashCommandBuilder } = require('discord.js');
-const fetchTornData = require('../../utils/torn/fetchTorn.js');
-const { setTornUser } = require('../../utils/torn/tornUsers.js');
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import fetchTornData from '../../../utils/torn/fetchTorn.js';
+import { getTornUser, setTornUser } from '../../../utils/torn/tornUsers.js';
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('tclink')
-    .setDescription('Verifikasi akun Torn City kamu')
-    .addStringOption(option =>
-      option.setName('apikey')
-        .setDescription('API key Torn City kamu')
-        .setRequired(true)
-    ),
+export const data = new SlashCommandBuilder()
+  .setName('tclink')
+  .setDescription('Verifikasi akun Torn City kamu')
+  .addStringOption(option =>
+    option.setName('apikey')
+      .setDescription('API key Torn City kamu')
+      .setRequired(true)
+  );
 
-  async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+export async function execute(interaction) {
+  await interaction.deferReply({ ephemeral: true });
 
-    const apiKey = interaction.options.getString('apikey');
+  const apiKey = interaction.options.getString('apikey');
 
-    const data = await fetchTornData('user', 'basic,profile', apiKey);
-
-    if (data.error) {
-      return interaction.editReply(`Gagal verifikasi: ${data.error}`);
-    }
-
-    await setTornUser(interaction.user.id, apiKey);
-
-    return interaction.editReply(
-      `Berhasil terverifikasi sebagai **${data.name}** [${data.player_id}]`
-    );
+  // Cek apakah user sudah pernah verifikasi
+  const existing = getTornUser(interaction.user.id);
+  if (existing) {
+    return interaction.editReply(`Kamu sudah terverifikasi sebagai **${existing.username}**.\nGunakan \`/tcunlink\` untuk mengganti akun.`);
   }
-};
+
+  const data = await fetchTornData('user', 'basic,profile', apiKey);
+
+  if (data.error) {
+    return interaction.editReply(`Gagal verifikasi: ${data.error}`);
+  }
+
+  if (!data.name || !data.player_id) {
+    return interaction.editReply('Data dari Torn City tidak lengkap. Silakan coba lagi.');
+  }
+
+  await setTornUser(interaction.user.id, apiKey, data.name, data.player_id);
+
+  const embed = new EmbedBuilder()
+    .setTitle('Verifikasi Berhasil')
+    .setDescription(`Akun kamu telah berhasil dihubungkan ke Torn City.`)
+    .addFields(
+      { name: 'Username', value: data.name, inline: true },
+      { name: 'Torn ID', value: String(data.player_id), inline: true }
+    )
+    .setColor('Green')
+    .setFooter({ text: 'Selamat bermain dan semoga hoki!' });
+
+  return interaction.editReply({ embeds: [embed] });
+}
