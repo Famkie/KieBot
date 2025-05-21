@@ -1,35 +1,19 @@
-// logger.js
 const chalk = require('chalk');
 
-const timestamp = () => {
-  return new Date().toISOString();
-};
+const timestamp = () => new Date().toISOString();
 
 const log = (type, message) => {
-  let logMessage = `[${timestamp()}] `;
+  const prefixMap = {
+    info: chalk.blue('[INFO]'),
+    warn: chalk.yellow('[WARN]'),
+    error: chalk.red('[ERROR]'),
+    event: chalk.magenta('[EVENT]'),
+    command: chalk.green('[COMMAND]')
+  };
 
-  switch (type) {
-    case 'info':
-      logMessage += chalk.blue('[INFO] ') + message;
-      break;
-    case 'warn':
-      logMessage += chalk.yellow('[WARN] ') + message;
-      break;
-    case 'error':
-      logMessage += chalk.red('[ERROR] ') + message;
-      break;
-    case 'event':
-      logMessage += chalk.magenta('[EVENT] ') + message;
-      break;
-    case 'command':
-      logMessage += chalk.green('[COMMAND] ') + message;
-      break;
-    default:
-      logMessage += message;
-      break;
-  }
+  const prefix = prefixMap[type] || '';
 
-  console.log(logMessage);
+  console.log(`[${timestamp()}] ${prefix} ${message}`);
 };
 
 module.exports = { log };
