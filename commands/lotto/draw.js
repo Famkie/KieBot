@@ -1,18 +1,24 @@
+// commands/slash/lotto/drawLotto.js
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import lottoStore from '../../utils/torn/lottoStore.js';
+import {
+  getCurrentLotto,
+  getEntries,
+  clearCurrentLotto
+} from '../../utils/torn/lottoStore.js';
 
 export const data = new SlashCommandBuilder()
   .setName('draw')
   .setDescription('Draw the winner(s) of the current lotto');
 
 export async function execute(interaction) {
-  const lotto = lottoStore.activeLotto;
-  if (!lotto) return interaction.reply('Tidak ada undian aktif.');
+  const lotto = getCurrentLotto();
+  if (!lotto) return interaction.reply({ content: 'Tidak ada undian aktif.', ephemeral: true });
 
-  if (lotto.entries.length < 1) return interaction.reply('Belum ada peserta yang ikut.');
+  const entries = getEntries();
+  if (entries.length < 1) return interaction.reply({ content: 'Belum ada peserta yang ikut.', ephemeral: true });
 
   // Shuffle peserta
-  const shuffled = lotto.entries.sort(() => 0.5 - Math.random());
+  const shuffled = [...entries].sort(() => 0.5 - Math.random());
   const winners = shuffled.slice(0, lotto.winners);
 
   const winnerText = winners
@@ -27,6 +33,6 @@ export async function execute(interaction) {
 
   await interaction.reply({ embeds: [embed] });
 
-  // Reset
-  lottoStore.activeLotto = null;
+  // Reset store
+  clearCurrentLotto();
 }
