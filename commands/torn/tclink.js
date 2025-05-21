@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
-const fetchTornData = require('../../utils/fetchTorn');
-const { setTornUser } = require('../../utils/tornUsers');
+const fetchTornData = require('../../utils/torn/fetchTorn.js');
+const { setTornUser } = require('../../utils/torn/tornUsers.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
