@@ -1,7 +1,7 @@
 // commands/lotto/cd.js
 const { SlashCommandBuilder } = require('discord.js');
-const lottoStore = require('../../utils/lottoStore.js');
-const { drawWinners } = require('../../utils/lottoDraw.js');
+const lottoStore = require('../../utils/torn/lottoStore.js');
+const { drawWinners } = require('../../utils/torn/lottoDraw.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
