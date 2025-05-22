@@ -1,24 +1,34 @@
 // utils/torn/isVerifiedTC.js
+const verifiedRoleId = 'ROLE_ID_VERIFIED_TORN'; // Ganti sesuai role verified kamu
+const guildId = '1353368445395275776'; // CLIENT_GUILD kamu
 
-/**
- * Mengecek apakah user Discord memiliki peran VERIFIED_ROLE_ID di guild TORN_GUILD_ID.
- * 
- * @param {import('discord.js').Client} client - Instance Discord client
- * @param {string} userId - ID user yang ingin diverifikasi
- * @returns {Promise<boolean>} - Apakah user terverifikasi atau tidak
- */
-export async function isVerifiedTC(client, userId) {
+// Cache untuk menyimpan hasil cek per user selama 5 menit (300000 ms)
+const cache = new Map();
+
+export default async function isVerifiedTC(client, userId) {
+  // Cek cache dulu
+  const cached = cache.get(userId);
+  const now = Date.now();
+  if (cached && now - cached.timestamp < 300000) {
+    return cached.verified;
+  }
+
   try {
-    const guild = await client.guilds.fetch(process.env.TORN_GUILD_ID);
-    if (!guild) {
-      console.warn("Guild tidak ditemukan.");
-      return false;
-    }
+    const guild = await client.guilds.fetch(guildId);
+    if (!guild) throw new Error('Guild not found');
 
     const member = await guild.members.fetch(userId);
-    return member.roles.cache.has(process.env.VERIFIED_ROLE_ID);
-  } catch (err) {
-    console.error(`Gagal mengecek verifikasi user ${userId}:`, err);
+    if (!member) throw new Error('Member not found');
+
+    const verified = member.roles.cache.has(verifiedRoleId);
+
+    // Update cache
+    cache.set(userId, { verified, timestamp: now });
+
+    return verified;
+  } catch (error) {
+    console.error(`isVerifiedTC error for user ${userId}:`, error.message);
+    // Kalau error, anggap user belum verified
     return false;
   }
 }
