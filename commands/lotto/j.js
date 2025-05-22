@@ -1,34 +1,38 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import lottoStore from '../../utils/torn/lottoStore.js';
-import { getTornUser } from '../../utils/torn/tornUsers.js';
-import fetchTornData from '../../utils/torn/fetchTorn.js';
+// commands/lotto/j.js
+
+import { SlashCommandBuilder } from 'discord.js';
+import { addEntry, getCurrentLotto, getEntryById } from '../../utils/torn/lottoStore.js';
+import { isVerifiedTC } from '../../utils/torn/isVerifiedTC.js';
 
 export const data = new SlashCommandBuilder()
   .setName('j')
-  .setDescription('Join the current lotto');
+  .setDescription('Join undian aktif');
 
 export async function execute(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  const lotto = getCurrentLotto();
+  if (!lotto) {
+    return interaction.reply({ content: 'Tidak ada undian aktif saat ini.', ephemeral: true });
+  }
 
-  const tornUser = getTornUser(interaction.user.id);
-  if (!tornUser) return interaction.editReply('Akun kamu belum terhubung dengan Torn City. Gunakan `/tcverify`.');
+  const userId = interaction.user.id;
 
-  const profile = await fetchTornData('user', 'basic', tornUser.key);
-  if (profile.error) return interaction.editReply(`Gagal ambil data Torn: ${profile.error}`);
+  // Cek apakah user sudah join
+  if (getEntryById(userId)) {
+    return interaction.reply({ content: 'Kamu sudah join undian ini.', ephemeral: true });
+  }
 
-  const lotto = lottoStore.activeLotto;
-  if (!lotto) return interaction.editReply('Tidak ada undian aktif saat ini.');
+  // Cek apakah user terverifikasi (opsional)
+  const verified = await isVerifiedTC(interaction.client, userId);
+  if (!verified) {
+    return interaction.reply({ content: 'Kamu belum terverifikasi di Torn Guild.', ephemeral: true });
+  }
 
-  const alreadyJoined = lotto.entries.find(e => e.id === interaction.user.id);
-  if (alreadyJoined) return interaction.editReply('Kamu sudah ikut undian ini.');
+  const entry = {
+    id: userId,
+    name: interaction.user.username,
+    joinedAt: Date.now()
+  };
 
-  const entryNumber = lotto.entries.length + 1;
-  lotto.entries.push({ id: interaction.user.id, username: profile.name, tornId: profile.player_id });
-
-  const embed = new EmbedBuilder()
-    .setColor('Green')
-    .setDescription(`✅ ${profile.name} [${profile.player_id}] berhasil masuk undian sebagai nomor ${entryNumber}`);
-
-  await interaction.channel.send({ embeds: [embed] });
-  await interaction.editReply('Berhasil masuk ke undian.');
+  addEntry(entry);
+  return interaction.reply({ content: `Berhasil join undian untuk ${lotto.prize}!`, ephemeral: false });
 }
