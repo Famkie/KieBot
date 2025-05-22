@@ -1,5 +1,4 @@
 // utils/torn/lottoDraw.js
-
 import { getEntries, clearCurrentLotto, getCurrentLotto, addStat } from './lottoStore.js';
 
 export function drawLotto() {
@@ -24,4 +23,20 @@ export function drawLotto() {
   clearCurrentLotto(); // Reset setelah draw
 
   return result;
+}
+
+export function drawWinners(client, channel) {
+  const result = drawLotto();
+
+  if (!result) {
+    channel.send("Gagal melakukan undian. Mungkin tidak ada entri?");
+    return;
+  }
+
+  channel.send(
+    `**Lotto telah diundi!**\n` +
+    `Pemenang: <@${result.winner.id}>\n` +
+    `Hadiah: $${result.prize.toLocaleString()}\n` +
+    `Jumlah Peserta: ${result.total}`
+  );
 }
