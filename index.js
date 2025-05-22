@@ -42,9 +42,13 @@ const handlerPath = path.join(__dirname, 'handlers');
 const handlerFiles = readdirSync(handlerPath).filter(file => file.endsWith('.js'));
 
 for (const file of handlerFiles) {
-  const { default: handler } = await import(path.join(handlerPath, file));
-  await handler(client);
-  log.info(`Handler ${file} dimuat.`);
+  try {
+    const { default: handler } = await import(path.join(handlerPath, file));
+    await handler(client);
+    log.info(`Handler ${file} dimuat.`);
+  } catch (err) {
+    log.error(`Gagal memuat handler ${file}: ${err.message}`);
+  }
 }
 
 log.info('Semua handler berhasil dimuat.');
