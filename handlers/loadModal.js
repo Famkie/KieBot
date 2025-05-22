@@ -1,35 +1,30 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import log from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default async (client) => {
-  client.modals = new Map();
+  try {
+    const modalFiles = [
+      '../interactions/modals/feedbackModal.js',
+      // Tambahkan modal lainnya di sini kalau ada
+    ];
 
-  const modalsPath = path.join(__dirname, '..', 'interactions', 'modals');
-  if (!fs.existsSync(modalsPath)) {
-    console.warn('[Modal] Folder modals belum ada, buat dulu ya di:', modalsPath);
-    return;
-  }
+    for (const filePath of modalFiles) {
+      const fullPath = path.join(__dirname, filePath);
+      const modal = (await import(fullPath)).default;
 
-  const files = fs.readdirSync(modalsPath).filter(f => f.endsWith('.js'));
-
-  for (const file of files) {
-    try {
-      const filePath = path.join(modalsPath, file);
-      const modalModule = await import(filePath);
-      const modal = modalModule.default || modalModule;
-
-      if (modal.customId && typeof modal.execute === 'function') {
-        client.modals.set(modal.customId, modal);
-        console.log(`[Modal] Loaded: ${modal.customId}`);
-      } else {
-        console.warn(`[Modal] Invalid modal handler in file: ${file}`);
+      if (!modal?.customId || !modal?.execute) {
+        log.warn(`[Modal] ${filePath} tidak valid!`);
+        continue;
       }
-    } catch (err) {
-      console.error(`[Modal] Error loading ${file}:`, err);
+
+      client.modals.set(modal.customId, modal);
+      log.info(`[Modal] Loaded: ${modal.customId}`);
     }
+  } catch (err) {
+    log.error(`[Modal] Error saat load modal: ${err.message}`);
   }
-}; 
+};
