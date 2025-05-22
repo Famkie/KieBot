@@ -3,7 +3,7 @@ import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 const giveaways = new Map(); // Temp storage, bisa kamu pindah ke DB
 
 export const data = new SlashCommandBuilder()
-  .setName('giveaway-start')
+  .setName('gstart')
   .setDescription('Mulai giveaway baru')
   .addStringOption(option => 
     option.setName('hadiah')
