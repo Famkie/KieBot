@@ -1,13 +1,7 @@
 import path from 'path';
 import { readdirSync, statSync } from 'fs';
-import { fileURLToPath } from 'url';
 import log from '../utils/logger.js';
 
-// Mendapatkan __dirname dengan ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Fungsi untuk scan folder rekursif
 const loadFiles = (dirPath) => {
   const files = [];
   const items = readdirSync(dirPath);
@@ -27,16 +21,10 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  // Gunakan __dirname sebagai acuan yang benar
   const slashDir = path.join(__dirname, '../interactions/slash');
-  
-  let commandFiles = [];
-  try {
-    commandFiles = loadFiles(slashDir);
-  } catch (err) {
-    log.error(`Folder slash commands tidak ditemukan: ${slashDir}`);
-    return;
-  }
+  console.log('[SlashLoader] Mencoba load dari path:', slashDir);
+
+  const commandFiles = loadFiles(slashDir);
 
   for (const file of commandFiles) {
     try {
