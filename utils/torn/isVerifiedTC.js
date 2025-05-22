@@ -1,6 +1,6 @@
 // utils/torn/isVerifiedTC.js
 const verifiedRoleId = 'ROLE_ID_VERIFIED_TORN'; // Ganti sesuai role verified kamu
-const guildId = '1353368445395275776'; // CLIENT_GUILD kamu
+const guildId = '343057854078386177'; // CLIENT_GUILD kamu
 
 // Cache untuk menyimpan hasil cek per user selama 5 menit (300000 ms)
 const cache = new Map();
