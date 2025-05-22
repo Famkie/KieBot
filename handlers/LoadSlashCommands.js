@@ -1,6 +1,10 @@
 import path from 'path';
 import { readdirSync, statSync } from 'fs';
+import { fileURLToPath } from 'url';
 import log from '../utils/logger.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const loadFiles = (dirPath) => {
   const files = [];
