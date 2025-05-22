@@ -1,12 +1,13 @@
+// handlers/loadSlashCommands.js
 import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { readdirSync, statSync } from 'fs';
 import log from '../utils/logger.js';
+import { fileURLToPath } from 'url';
 
-// Absolute fallback ke root project jika semua gagal
-const BASE_DIR = '/home/container';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// Recursive function untuk ambil semua file .js/.ts
 const loadFiles = (dirPath) => {
   const files = [];
   const items = readdirSync(dirPath);
@@ -26,21 +27,18 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  const slashDir = path.join(BASE_DIR, 'interactions', 'slash');
+  const slashDir = path.join(__dirname, '..', 'interactions', 'slash');
 
-  console.log('[DEBUG] Using fallback BASE_DIR:', BASE_DIR);
   console.log('[DEBUG] SlashDir Path:', slashDir);
-
-  if (!fs.existsSync(slashDir)) {
-    log.error(`Folder tidak ditemukan: ${slashDir}`);
-    return;
-  }
 
   const commandFiles = loadFiles(slashDir);
 
   for (const file of commandFiles) {
+    console.log('[DEBUG] Loading file:', file); // Tambahkan log per file
     try {
-      const command = (await import(file)).default;
+      const commandModule = await import(file);
+      const command = commandModule.default;
+
       if (!command?.data || !command?.execute) {
         log.warn(`Slash Command di ${file} tidak valid`);
         continue;
