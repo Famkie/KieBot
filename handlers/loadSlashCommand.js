@@ -23,7 +23,9 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  const slashDir = path.join(__dirname, '../interactions/slash');
+  import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const slashDir = path.resolve(__dirname, '../interactions/slash');
   const commandFiles = loadFiles(slashDir);
 
   for (const file of commandFiles) {
