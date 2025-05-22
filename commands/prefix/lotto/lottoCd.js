@@ -1,4 +1,4 @@
-// commands/prefix/lotto/lottoCd.js
+// commands/prefix/lotto/countDown.js
 import { getCurrentLotto } from '../../../utils/torn/lottoStore.js';
 import { drawWinners } from '../../../utils/torn/lottoDraw.js';
 
