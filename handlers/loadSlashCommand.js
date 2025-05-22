@@ -1,10 +1,6 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { readdirSync, statSync } from 'fs';
 import log from '../utils/logger.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const loadFiles = (dirPath) => {
   const files = [];
@@ -25,7 +21,7 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  const slashDir = path.join(__dirname, '../interactions/slash');
+  const slashDir = path.resolve(process.cwd(), 'interactions/slash');
   const commandFiles = loadFiles(slashDir);
 
   for (const file of commandFiles) {
