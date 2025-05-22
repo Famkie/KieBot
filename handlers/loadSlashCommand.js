@@ -21,7 +21,7 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  const slashDir = path.resolve(process.cwd(), 'interactions/slash');
+  const slashDir = path.resolve(process.cwd(), '../interactions/slash');
 
   // === Tambahkan log ini ===
   console.log('[DEBUG] SlashDir Path:', slashDir);
