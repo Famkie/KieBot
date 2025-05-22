@@ -1,4 +1,3 @@
-// commands/slash/lotto/countdownDraw.js
 import { SlashCommandBuilder } from 'discord.js';
 import { getCurrentLotto } from '../../utils/torn/lottoStore.js';
 import { drawWinners } from '../../utils/torn/lottoDraw.js';
