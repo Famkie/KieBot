@@ -1,4 +1,4 @@
-// commands/prefix/lotto/drawLotto.js
+// commands/prefix/lotto/lottoDraw.js
 import { EmbedBuilder } from 'discord.js';
 import {
   getCurrentLotto,
