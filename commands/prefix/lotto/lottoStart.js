@@ -1,4 +1,4 @@
-// commands/prefix/lotto/sl.js
+// commands/prefix/lotto/lottoStart.js
 import { setCurrentLotto, getCurrentLotto } from '../../../utils/torn/lottoStore.js';
 import isVerifiedTC from '../../../utils/torn/isVerifiedTC.js';
 
