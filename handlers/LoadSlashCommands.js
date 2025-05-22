@@ -1,47 +1,35 @@
 import path from 'path';
-import { readdirSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import log from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const loadFiles = (dirPath) => {
-  const files = [];
-  const items = readdirSync(dirPath);
-
-  for (const item of items) {
-    const fullPath = path.join(dirPath, item);
-    const stats = statSync(fullPath);
-
-    if (stats.isDirectory()) {
-      files.push(...loadFiles(fullPath));
-    } else if (item.endsWith('.js') || item.endsWith('.ts')) {
-      files.push(fullPath);
-    }
-  }
-
-  return files;
-};
-
 export default async (client) => {
-  const slashDir = path.join(__dirname, '../interactions/slash');
-  console.log('[SlashLoader] Mencoba load dari path:', slashDir);
+  const folders = ['giveaway']; // Sesuaikan dengan folder di interactions/slash
 
-  const commandFiles = loadFiles(slashDir);
-
-  for (const file of commandFiles) {
+  for (const folder of folders) {
     try {
-      const command = (await import(file)).default;
-      if (!command?.data || !command?.execute) {
-        log.warn(`Slash Command di ${file} tidak valid`);
-        continue;
-      }
+      const filePaths = [
+        // Tambahkan file JS di folder itu secara eksplisit
+        `../interactions/slash/${folder}/start.js`,
+        // Tambah sesuai kebutuhan
+      ];
 
-      client.commands.set(command.data.name, command);
-      log.info(`Loaded Slash Command: ${command.data.name}`);
+      for (const filePath of filePaths) {
+        const fullPath = path.join(__dirname, filePath);
+        const command = (await import(fullPath)).default;
+
+        if (!command?.data || !command?.execute) {
+          log.warn(`[SlashCommand] ${filePath} tidak valid!`);
+          continue;
+        }
+
+        client.commands.set(command.data.name, command);
+        log.info(`[SlashCommand] Loaded: ${command.data.name}`);
+      }
     } catch (err) {
-      log.error(`Gagal load Slash Command ${file}: ${err.message}`);
+      log.error(`[SlashCommand] Error saat load ${folder}: ${err.message}`);
     }
   }
 };
