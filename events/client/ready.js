@@ -2,7 +2,7 @@ import { REST, Routes } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { clientId, guildId, token } from '../../config/config.js';
+import config from '../../config/config.js'; // FIXED
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,11 +34,11 @@ export default {
       }
     }
 
-    const rest = new REST({ version: '10' }).setToken(token);
+    const rest = new REST({ version: '10' }).setToken(config.token); // FIXED
     try {
       console.log('🚀 Deploying slash commands...');
       await rest.put(
-        Routes.applicationGuildCommands(clientId, guildId),
+        Routes.applicationGuildCommands(config.clientId, config.guildId), // FIXED
         { body: commands }
       );
       console.log('✅ Slash commands deployed successfully!');
