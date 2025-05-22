@@ -11,7 +11,7 @@ const loadFiles = (dirPath) => {
     const stats = statSync(fullPath);
 
     if (stats.isDirectory()) {
-      files.push(...loadFiles(fullPath)); // recursive
+      files.push(...loadFiles(fullPath));
     } else if (item.endsWith('.js') || item.endsWith('.ts')) {
       files.push(fullPath);
     }
@@ -21,13 +21,13 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  const slashDir = path.resolve(process.cwd(), 'interactions/slash');
+  const slashDir = path.resolve(process.cwd(), 'interactions/slash'); // FIXED PATH
   const commandFiles = loadFiles(slashDir);
 
   for (const file of commandFiles) {
     try {
       const command = (await import(file)).default;
-      if (!command || !command.data || !command.execute) {
+      if (!command?.data || !command?.execute) {
         log.warn(`Slash Command di ${file} tidak valid`);
         continue;
       }
