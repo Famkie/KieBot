@@ -1,47 +1,40 @@
-import { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } from 'discord.js';
-import lottoStore from '../../utils/torn/lottoStore.js';
-import { getTornUser } from '../../utils/torn/tornUsers.js';
-import fetchTornData from '../../utils/torn/fetchTorn.js';
+// commands/lotto/sl.js
+
+import { SlashCommandBuilder } from 'discord.js';
+import { setCurrentLotto, getCurrentLotto } from '../../utils/torn/lottoStore.js';
+import { isVerifiedTC } from '../../utils/torn/isVerifiedTC.js';
 
 export const data = new SlashCommandBuilder()
   .setName('sl')
-  .setDescription('Start a new lotto');
+  .setDescription('Memulai undian baru')
+  .addStringOption(option =>
+    option.setName('prize')
+      .setDescription('Hadiah undian')
+      .setRequired(true)
+  );
 
 export async function execute(interaction) {
-  await interaction.deferReply();
+  const userId = interaction.user.id;
 
-  const tornUser = getTornUser(interaction.user.id);
-  if (!tornUser) return interaction.editReply('Akun kamu belum terhubung dengan Torn City. Gunakan `/tcverify` terlebih dahulu.');
+  // Cek verifikasi Torn
+  const verified = await isVerifiedTC(interaction.client, userId);
+  if (!verified) {
+    return interaction.reply({ content: 'Kamu belum terverifikasi di Torn Guild.', ephemeral: true });
+  }
 
-  const profile = await fetchTornData('user', 'basic,profile', tornUser.key);
-  if (profile.error) return interaction.editReply(`Gagal mengambil data Torn: ${profile.error}`);
+  const prize = interaction.options.getString('prize');
+  const existingLotto = getCurrentLotto();
 
-  if (lottoStore.activeLotto) return interaction.editReply('Masih ada undian yang aktif. Selesaikan dulu.');
+  if (existingLotto) {
+    return interaction.reply({ content: 'Masih ada undian yang sedang berjalan.', ephemeral: true });
+  }
 
-  const hostName = `${profile.name} [${profile.player_id}]`;
-  const prize = 'cape tiap hari od';
-
-  lottoStore.activeLotto = {
-    host: hostName,
+  const newLotto = {
+    host: userId,
     prize,
-    entries: []
+    startedAt: Date.now()
   };
 
-  const embed = new EmbedBuilder()
-    .setTitle(`🎉 ${hostName} has started a lotto! 🎉`)
-    .setDescription(`Use /j to enter for a chance to win ${prize}!`)
-    .setColor('Green');
-
-  const joinButton = new ButtonBuilder()
-    .setCustomId('join_lotto')
-    .setLabel('Join')
-    .setStyle(ButtonStyle.Primary);
-
-  const row = new ActionRowBuilder().addComponents(joinButton);
-
-  await interaction.editReply({
-    content: `Ada undian baru nih <@&LottoHunter>! Buruan join!`,
-    embeds: [embed],
-    components: [row]
-  });
+  setCurrentLotto(newLotto);
+  return interaction.reply(`Undian baru dimulai oleh <@${userId}> untuk **${prize}**! Gunakan \`/j\` untuk bergabung.`);
 }
