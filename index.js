@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readdirSync } from 'fs';
 import { Client, Collection, GatewayIntentBits, Partials } from 'discord.js';
 
 import config from './config/config.js';
@@ -36,21 +37,14 @@ client.modals = new Collection();
 client.selectMenus = new Collection();
 client.contextMenus = new Collection();
 
-// === Load All Handlers ===
+// === Auto Load Handlers ===
 const handlerPath = path.join(__dirname, 'handlers');
-const handlers = [
-  'loadEvents.js',
-  'loadPrefixCommands.js',
-  'loadSlashCommands.js',
-  'loadButtons.js',
-  'loadModals.js',
-  'loadSelectMenus.js',
-  'loadContextMenus.js'
-];
+const handlerFiles = readdirSync(handlerPath).filter(file => file.endsWith('.js'));
 
-for (const file of handlers) {
-  const handler = await import(path.join(handlerPath, file));
-  await handler.default(client);
+for (const file of handlerFiles) {
+  const { default: handler } = await import(path.join(handlerPath, file));
+  await handler(client);
+  log.info(`Handler ${file} dimuat.`);
 }
 
 log.info('Semua handler berhasil dimuat.');
