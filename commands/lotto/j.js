@@ -2,7 +2,7 @@
 
 import { SlashCommandBuilder } from 'discord.js';
 import { addEntry, getCurrentLotto, getEntryById } from '../../utils/torn/lottoStore.js';
-import { isVerifiedTC } from '../../utils/torn/isVerifiedTC.js';
+import isVerifiedTC from '../../utils/torn/isVerifiedTC.js';
 
 export const data = new SlashCommandBuilder()
   .setName('j')
