@@ -1,9 +1,7 @@
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { readdirSync, statSync } from 'fs';
 import log from '../utils/logger.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const loadFiles = (dirPath) => {
   const files = [];
   const items = readdirSync(dirPath);
@@ -23,9 +21,12 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  import { fileURLToPath } from 'url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const slashDir = path.resolve(__dirname, '../interactions/slash');
+  const slashDir = path.resolve(process.cwd(), 'interactions/slash');
+
+  // === Tambahkan log ini ===
+  console.log('[DEBUG] SlashDir Path:', slashDir);
+  // =========================
+
   const commandFiles = loadFiles(slashDir);
 
   for (const file of commandFiles) {
