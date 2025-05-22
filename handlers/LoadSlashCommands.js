@@ -4,11 +4,9 @@ import { fileURLToPath } from 'url';
 import { readdirSync, statSync } from 'fs';
 import log from '../utils/logger.js';
 
-// Setup __dirname karena pakai ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Absolute fallback ke root project jika semua gagal
+const BASE_DIR = '/home/container';
 
-// Fungsi rekursif untuk membaca file di folder dan subfolder
 const loadFiles = (dirPath) => {
   const files = [];
   const items = readdirSync(dirPath);
@@ -28,12 +26,11 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  const slashDir = path.join(__dirname, '..', 'interactions', 'slash');
+  const slashDir = path.join(BASE_DIR, 'interactions', 'slash');
 
-  // Debug log untuk memastikan path-nya benar
+  console.log('[DEBUG] Using fallback BASE_DIR:', BASE_DIR);
   console.log('[DEBUG] SlashDir Path:', slashDir);
 
-  // Cek apakah folder ada
   if (!fs.existsSync(slashDir)) {
     log.error(`Folder tidak ditemukan: ${slashDir}`);
     return;
