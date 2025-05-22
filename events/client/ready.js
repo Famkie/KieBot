@@ -17,7 +17,7 @@ export default {
 
     // AUTO DEPLOY SLASH COMMAND
     const commands = [];
-    const slashFolderPath = path.join(__dirname, '../../../commands/slash');
+    const slashFolderPath = path.join(__dirname, '../../../interactions/slash');
     const commandFolders = fs.readdirSync(slashFolderPath);
 
     for (const folder of commandFolders) {
