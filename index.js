@@ -1,5 +1,3 @@
-console.log('[DEBUG] CWD:', process.cwd());
-
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
