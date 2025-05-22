@@ -1,13 +1,13 @@
-// handlers/loadSlashCommands.js
 import path from 'path';
 import { readdirSync, statSync } from 'fs';
-import log from '../utils/logger.js';
 import { fileURLToPath } from 'url';
+import log from '../utils/logger.js';
 
+// Mendapatkan __dirname dengan ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Recursive function untuk ambil semua file .js/.ts
+// Fungsi untuk scan folder rekursif
 const loadFiles = (dirPath) => {
   const files = [];
   const items = readdirSync(dirPath);
@@ -27,18 +27,20 @@ const loadFiles = (dirPath) => {
 };
 
 export default async (client) => {
-  const slashDir = path.join(__dirname, '..', 'interactions', 'slash');
-
-  console.log('[DEBUG] SlashDir Path:', slashDir);
-
-  const commandFiles = loadFiles(slashDir);
+  // Gunakan __dirname sebagai acuan yang benar
+  const slashDir = path.join(__dirname, '../interactions/slash');
+  
+  let commandFiles = [];
+  try {
+    commandFiles = loadFiles(slashDir);
+  } catch (err) {
+    log.error(`Folder slash commands tidak ditemukan: ${slashDir}`);
+    return;
+  }
 
   for (const file of commandFiles) {
-    console.log('[DEBUG] Loading file:', file); // Tambahkan log per file
     try {
-      const commandModule = await import(file);
-      const command = commandModule.default;
-
+      const command = (await import(file)).default;
       if (!command?.data || !command?.execute) {
         log.warn(`Slash Command di ${file} tidak valid`);
         continue;
