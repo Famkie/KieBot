@@ -1,8 +1,8 @@
-// utils/lottoDraw.js
+// utils/torn/lottoDraw.js
 
-const { getEntries, clearCurrentLotto, getCurrentLotto, addStat } = require('./lottoStore');
+import { getEntries, clearCurrentLotto, getCurrentLotto, addStat } from './lottoStore.js';
 
-function drawLotto() {
+export function drawLotto() {
   const entries = getEntries();
   const lotto = getCurrentLotto();
 
@@ -11,7 +11,7 @@ function drawLotto() {
   const winnerIndex = Math.floor(Math.random() * entries.length);
   const winner = entries[winnerIndex];
 
-  addStat(winner.id); // menambahkan statistik untuk leaderboard
+  addStat(winner.id); // Tambahkan statistik untuk leaderboard
 
   const result = {
     prize: lotto.prize,
@@ -21,9 +21,7 @@ function drawLotto() {
     total: entries.length
   };
 
-  clearCurrentLotto(); // reset setelah draw
+  clearCurrentLotto(); // Reset setelah draw
 
   return result;
 }
-
-module.exports = { drawLotto };
