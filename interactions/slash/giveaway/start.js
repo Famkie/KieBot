@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 
-const giveaways = new Map(); // Temp storage, bisa kamu pindah ke DB
+const giveaways = new Map();
 
 export default {
   data: new SlashCommandBuilder()
@@ -29,7 +29,7 @@ export default {
     }
 
     const endsAt = Date.now() + durasi * 60000;
-    
+
     const embed = {
       title: '🎉 GIVEAWAY DIMULAI! 🎉',
       description: `Hadiah: **${hadiah}**\nDurasi: ${durasi} menit\nKlik tombol untuk ikut!`,
@@ -56,43 +56,43 @@ export default {
       endsAt,
       participants: new Set(),
       channelId: channel.id,
-      timeout: setTimeout(() => endGiveaway(channel.id, interaction.client), durasi * 60000),
+      timeout: setTimeout(() => endGiveaway(channel.id), durasi * 60000),
     });
 
     await interaction.reply({ content: `Giveaway dimulai! Hadiah: **${hadiah}**`, ephemeral: true });
+
+    async function endGiveaway(channelId) {
+      const giveaway = giveaways.get(channelId);
+      if (!giveaway) return;
+
+      const channel = await interaction.client.channels.fetch(giveaway.channelId);
+      if (!channel) return;
+
+      try {
+        const message = await channel.messages.fetch(giveaway.messageId);
+        if (!message) return;
+
+        const participantsArr = Array.from(giveaway.participants);
+        let winnerMsg;
+        if (participantsArr.length === 0) {
+          winnerMsg = 'Sayang sekali, tidak ada yang ikut giveaway ini.';
+        } else {
+          const winnerId = participantsArr[Math.floor(Math.random() * participantsArr.length)];
+          winnerMsg = `<@${winnerId}> memenangkan giveaway dengan hadiah **${giveaway.hadiah}**! Selamat!`;
+        }
+
+        const resultEmbed = {
+          title: '🎉 GIVEAWAY SELESAI 🎉',
+          description: winnerMsg,
+          color: 0xFFD700,
+        };
+
+        await message.edit({ embeds: [resultEmbed], components: [] });
+      } catch (error) {
+        console.error('Gagal update message giveaway:', error);
+      }
+
+      giveaways.delete(channelId);
+    }
   }
 };
-
-async function endGiveaway(channelId, client) {
-  const giveaway = giveaways.get(channelId);
-  if (!giveaway) return;
-
-  const channel = await client.channels.fetch(giveaway.channelId);
-  if (!channel) return;
-
-  try {
-    const message = await channel.messages.fetch(giveaway.messageId);
-    if (!message) return;
-
-    const participantsArr = Array.from(giveaway.participants);
-    let winnerMsg;
-    if (participantsArr.length === 0) {
-      winnerMsg = 'Sayang sekali, tidak ada yang ikut giveaway ini.';
-    } else {
-      const winnerId = participantsArr[Math.floor(Math.random() * participantsArr.length)];
-      winnerMsg = `<@${winnerId}> memenangkan giveaway dengan hadiah **${giveaway.hadiah}**! Selamat!`;
-    }
-
-    const embed = {
-      title: '🎉 GIVEAWAY SELESAI 🎉',
-      description: winnerMsg,
-      color: 0xFFD700,
-    };
-
-    await message.edit({ embeds: [embed], components: [] });
-  } catch (error) {
-    console.error('Gagal update message giveaway:', error);
-  }
-
-  giveaways.delete(channelId);
-}
