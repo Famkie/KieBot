@@ -1,35 +1,34 @@
+// handlers/loadSlashCommands.js
 import path from 'path';
-import { fileURLToPath } from 'url';
 import log from '../utils/logger.js';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default async (client) => {
-  const folders = ['giveaway']; // Sesuaikan dengan folder di interactions/slash
+  const categories = ['general', 'giveaway']; // Tambahkan kategori lain kalau perlu
+  const baseDir = path.join(__dirname, '../interactions/slash');
 
-  for (const folder of folders) {
+  for (const category of categories) {
+    const categoryPath = path.join(baseDir, category);
+
     try {
-      const filePaths = [
-        // Tambahkan file JS di folder itu secara eksplisit
-        `../interactions/slash/${folder}/start.js`,
-        // Tambah sesuai kebutuhan
-      ];
-
-      for (const filePath of filePaths) {
-        const fullPath = path.join(__dirname, filePath);
-        const command = (await import(fullPath)).default;
+      const commandFiles = ['start.js', 'end.js', 'cancel.js']; // ganti sesuai file real
+      for (const file of commandFiles) {
+        const filePath = path.join(categoryPath, file);
+        const { default: command } = await import(filePath);
 
         if (!command?.data || !command?.execute) {
-          log.warn(`[SlashCommand] ${filePath} tidak valid!`);
+          log.warn(`[SlashLoader] Command di ${file} tidak valid`);
           continue;
         }
 
         client.commands.set(command.data.name, command);
-        log.info(`[SlashCommand] Loaded: ${command.data.name}`);
+        log.info(`[SlashLoader] Loaded: ${command.data.name}`);
       }
     } catch (err) {
-      log.error(`[SlashCommand] Error saat load ${folder}: ${err.message}`);
+      log.error(`[SlashLoader] Error load kategori ${category}: ${err.message}`);
     }
   }
 };
