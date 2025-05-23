@@ -1,11 +1,3 @@
-// handlers/loadEvents.js
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 export default async (client) => {
   const eventsPath = path.join(__dirname, '..', 'events');
   const folders = fs.readdirSync(eventsPath);
@@ -21,9 +13,21 @@ export default async (client) => {
 
       if (event?.name && typeof event.execute === 'function') {
         if (event.once) {
-          client.once(event.name, (...args) => event.execute(client, ...args));
+          client.once(event.name, (...args) => {
+            if (event.name === 'ready') {
+              event.execute(client);
+            } else {
+              event.execute(client, ...args);
+            }
+          });
         } else {
-          client.on(event.name, (...args) => event.execute(client, ...args));
+          client.on(event.name, (...args) => {
+            if (event.name === 'ready') {
+              event.execute(client);
+            } else {
+              event.execute(client, ...args);
+            }
+          });
         }
       }
     }
