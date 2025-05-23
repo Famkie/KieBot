@@ -1,3 +1,4 @@
+import path from 'path';
 export default async (client) => {
   const eventsPath = path.join(__dirname, '..', 'events');
   const folders = fs.readdirSync(eventsPath);
