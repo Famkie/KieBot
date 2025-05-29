@@ -1,46 +1,20 @@
-// handlers/loadEvents.js
-import fs from 'fs';
-import path from 'path';
+import { readdirSync } from 'fs';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import logger from '../utils/logger.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default async (client) => {
-  const eventsPath = path.join(__dirname, '..', 'events');
-
-  if (!fs.existsSync(eventsPath)) {
-    console.warn(`[WARNING] Folder events tidak ditemukan: ${eventsPath}`);
-    return;
-  }
-
-  const folders = fs.readdirSync(eventsPath);
-
-  for (const folder of folders) {
-    const folderPath = path.join(eventsPath, folder);
-
-    // Skip jika bukan folder
-    if (!fs.statSync(folderPath).isDirectory()) continue;
-
-    const files = fs.readdirSync(folderPath).filter(f => f.endsWith('.js'));
-
-    for (const file of files) {
-      const filePath = path.join(folderPath, file);
-      try {
-        const eventModule = await import(filePath);
-        const event = eventModule.default;
-
-        if (event?.name && typeof event.execute === 'function') {
-          if (event.once) {
-            client.once(event.name, (...args) => event.execute(client, ...args));
-          } else {
-            client.on(event.name, (...args) => event.execute(client, ...args));
-          }
-        }
-      } catch (err) {
-        console.error(`[ERROR] Gagal load event file ${file}: ${err.message}`);
-      }
+  const eventFolders = ['client', 'guild'];
+  for (const folder of eventFolders) {
+    const pathToEvents = join(__dirname, '../events', folder);
+    for (const file of readdirSync(pathToEvents)) {
+      const event = await import(join(pathToEvents, file));
+      const eventName = file.split('.')[0];
+      if (folder === 'client') client.on(eventName, (...args) => event.default(...args, client));
+      else client.on(eventName, event.default);
+      logger.info(`[Event] Loaded: ${eventName}`);
     }
   }
 };
- 
